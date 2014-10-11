@@ -48,12 +48,17 @@ public class FragmentPagerSupport extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        LogUtils.d("start content view");
+        setContentView(R.layout.fragment_pager);
+        LogUtils.d("end content view");
         setContentView(R.layout.fragment_pager);
 
         mAdapter = new MyAdapter(getFragmentManager());
 
         mPager = (ViewPager) findViewById(R.id.pager);
+        LogUtils.d("start set adapter");
         mPager.setAdapter(mAdapter);
+        LogUtils.d("end set adapter");
 
         // Watch for button clicks.
         Button button = (Button) findViewById(R.id.goto_first);

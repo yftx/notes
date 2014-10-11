@@ -31,7 +31,6 @@ import android.support.v4.view.accessibility.AccessibilityNodeInfoCompat;
 import android.support.v4.view.accessibility.AccessibilityRecordCompat;
 import android.support.v4.widget.EdgeEffectCompat;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.*;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.animation.Interpolator;
@@ -109,6 +108,7 @@ public class ViewPager extends ViewGroup {
     private static final Comparator<ItemInfo> COMPARATOR = new Comparator<ItemInfo>() {
         @Override
         public int compare(ItemInfo lhs, ItemInfo rhs) {
+            LogUtils.d("");
             return lhs.position - rhs.position;
         }
     };
@@ -204,15 +204,18 @@ public class ViewPager extends ViewGroup {
 
     public ViewPager(Context context) {
         super(context);
+        LogUtils.d("");
         initViewPager();
     }
 
     public ViewPager(Context context, AttributeSet attrs) {
         super(context, attrs);
+        LogUtils.d("");
         initViewPager();
     }
 
     void initViewPager() {
+        LogUtils.d("start");
         setWillNotDraw(false);
         setDescendantFocusability(FOCUS_AFTER_DESCENDANTS);
         setFocusable(true);
@@ -238,10 +241,12 @@ public class ViewPager extends ViewGroup {
             ViewCompat.setImportantForAccessibility(this,
                     ViewCompat.IMPORTANT_FOR_ACCESSIBILITY_YES);
         }
+        LogUtils.d("end");
     }
 
     @Override
     protected void onDetachedFromWindow() {
+        LogUtils.d("");
         removeCallbacks(mEndScrollRunnable);
         super.onDetachedFromWindow();
     }
@@ -287,6 +292,7 @@ public class ViewPager extends ViewGroup {
      * @param adapter Adapter to use
      */
     public void setAdapter(PagerAdapter adapter) {
+        LogUtils.d("start");
         if (mAdapter != null) {
             mAdapter.unregisterDataSetObserver(mObserver);
             mAdapter.startUpdate(this);
@@ -312,6 +318,7 @@ public class ViewPager extends ViewGroup {
             mAdapter.registerDataSetObserver(mObserver);
             mPopulatePending = false;
             final boolean wasFirstLayout = mFirstLayout;
+            LogUtils.d("wasFirstLayout " + wasFirstLayout);
             mFirstLayout = true;
             mExpectedAdapterCount = mAdapter.getCount();
             if (mRestoredCurItem >= 0) {
@@ -330,6 +337,7 @@ public class ViewPager extends ViewGroup {
         if (mAdapterChangeListener != null && oldAdapter != adapter) {
             mAdapterChangeListener.onAdapterChanged(oldAdapter, adapter);
         }
+        LogUtils.d("end");
     }
 
     void setOnAdapterChangeListener(OnAdapterChangeListener listener) {
@@ -488,19 +496,20 @@ public class ViewPager extends ViewGroup {
                     mSetChildrenDrawingOrderEnabled = ViewGroup.class.getDeclaredMethod(
                             "setChildrenDrawingOrderEnabled", new Class[]{Boolean.TYPE});
                 } catch (NoSuchMethodException e) {
-                    Log.e(TAG, "Can't find setChildrenDrawingOrderEnabled", e);
+                    LogUtils.e("Can't find setChildrenDrawingOrderEnabled", e);
                 }
             }
             try {
                 mSetChildrenDrawingOrderEnabled.invoke(this, enable);
             } catch (Exception e) {
-                Log.e(TAG, "Error changing children drawing order", e);
+                LogUtils.e("Error changing children drawing order", e);
             }
         }
     }
 
     @Override
     protected int getChildDrawingOrder(int childCount, int i) {
+        LogUtils.d("");
         final int index = mDrawingOrder == DRAW_ORDER_REVERSE ? childCount - 1 - i : i;
         final int result = ((LayoutParams) mDrawingOrderedChildren.get(index).getLayoutParams()).childIndex;
         return result;
@@ -548,7 +557,7 @@ public class ViewPager extends ViewGroup {
      */
     public void setOffscreenPageLimit(int limit) {
         if (limit < DEFAULT_OFFSCREEN_PAGES) {
-            Log.w(TAG, "Requested offscreen page limit " + limit + " too small; defaulting to " +
+            LogUtils.w("Requested offscreen page limit " + limit + " too small; defaulting to " +
                     DEFAULT_OFFSCREEN_PAGES);
             limit = DEFAULT_OFFSCREEN_PAGES;
         }
@@ -608,11 +617,13 @@ public class ViewPager extends ViewGroup {
 
     @Override
     protected boolean verifyDrawable(Drawable who) {
+        LogUtils.d("");
         return super.verifyDrawable(who) || who == mMarginDrawable;
     }
 
     @Override
     protected void drawableStateChanged() {
+        LogUtils.d("");
         super.drawableStateChanged();
         final Drawable d = mMarginDrawable;
         if (d != null && d.isStateful()) {
@@ -777,6 +788,7 @@ public class ViewPager extends ViewGroup {
     }
 
     void populate(int newCurrentItem) {
+//        LogUtils.d("mCurItem " + mCurItem + " newCurrentItem " + newCurrentItem);
         ItemInfo oldCurInfo = null;
         int focusDirection = View.FOCUS_FORWARD;
         if (mCurItem != newCurrentItem) {
@@ -785,17 +797,19 @@ public class ViewPager extends ViewGroup {
             mCurItem = newCurrentItem;
         }
 
+//        LogUtils.d("mAdapter " + mAdapter);
         if (mAdapter == null) {
             sortChildDrawingOrder();
             return;
         }
+//        LogUtils.d("mPopulatePending " + mPopulatePending);
 
         // Bail now if we are waiting to populate.  This is to hold off
         // on creating views from the time the user releases their finger to
         // fling to a new position until we have finished the scroll to
         // that position, avoiding glitches from happening at that point.
         if (mPopulatePending) {
-            if (DEBUG) Log.i(TAG, "populate is pending, skipping for now...");
+            if (DEBUG) LogUtils.i("populate is pending, skipping for now...");
             sortChildDrawingOrder();
             return;
         }
@@ -863,8 +877,8 @@ public class ViewPager extends ViewGroup {
                         mItems.remove(itemIndex);
                         mAdapter.destroyItem(this, pos, ii.object);
                         if (DEBUG) {
-                            Log.i(TAG, "populate() - destroyItem() with pos: " + pos +
-                                    " view: " + ((View) ii.object));
+                            LogUtils.i("populate() - destroyItem() with pos: " + pos +
+                                    " view: " + ( ii.object));
                         }
                         itemIndex--;
                         curIndex--;
@@ -897,8 +911,8 @@ public class ViewPager extends ViewGroup {
                             mItems.remove(itemIndex);
                             mAdapter.destroyItem(this, pos, ii.object);
                             if (DEBUG) {
-                                Log.i(TAG, "populate() - destroyItem() with pos: " + pos +
-                                        " view: " + ((View) ii.object));
+                                LogUtils.i("populate() - destroyItem() with pos: " + pos +
+                                        " view: " + ( ii.object));
                             }
                             ii = itemIndex < mItems.size() ? mItems.get(itemIndex) : null;
                         }
@@ -919,9 +933,9 @@ public class ViewPager extends ViewGroup {
         }
 
         if (DEBUG) {
-            Log.i(TAG, "Current page list:");
+            LogUtils.i("Current page list:");
             for (int i = 0; i < mItems.size(); i++) {
-                Log.i(TAG, "#" + i + ": page " + mItems.get(i).position);
+                LogUtils.i("#" + i + ": page " + mItems.get(i).position);
             }
         }
 
@@ -1068,6 +1082,7 @@ public class ViewPager extends ViewGroup {
 
     @Override
     public Parcelable onSaveInstanceState() {
+        LogUtils.d("");
         Parcelable superState = super.onSaveInstanceState();
         SavedState ss = new SavedState(superState);
         ss.position = mCurItem;
@@ -1079,6 +1094,7 @@ public class ViewPager extends ViewGroup {
 
     @Override
     public void onRestoreInstanceState(Parcelable state) {
+        LogUtils.d("");
         if (!(state instanceof SavedState)) {
             super.onRestoreInstanceState(state);
             return;
@@ -1099,6 +1115,7 @@ public class ViewPager extends ViewGroup {
 
     @Override
     public void addView(View child, int index, ViewGroup.LayoutParams params) {
+        LogUtils.d("");
         if (!checkLayoutParams(params)) {
             params = generateLayoutParams(params);
         }
@@ -1125,6 +1142,7 @@ public class ViewPager extends ViewGroup {
 
     @Override
     public void removeView(View view) {
+        LogUtils.d("");
         if (mInLayout) {
             removeViewInLayout(view);
         } else {
@@ -1165,12 +1183,14 @@ public class ViewPager extends ViewGroup {
 
     @Override
     protected void onAttachedToWindow() {
+        LogUtils.d("");
         super.onAttachedToWindow();
         mFirstLayout = true;
     }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        LogUtils.d("");
         // For simple implementation, our internal size is always 0.
         // We depend on the container to specify the layout size of
         // our view.  We can't really know what it is since we will be
@@ -1193,6 +1213,7 @@ public class ViewPager extends ViewGroup {
          * views won't intersect. We will pin to edges based on gravity.
          */
         int size = getChildCount();
+        LogUtils.d("childCount " + getChildCount());
         for (int i = 0; i < size; ++i) {
             final View child = getChildAt(i);
             if (child.getVisibility() != GONE) {
@@ -1251,7 +1272,7 @@ public class ViewPager extends ViewGroup {
         for (int i = 0; i < size; ++i) {
             final View child = getChildAt(i);
             if (child.getVisibility() != GONE) {
-                if (DEBUG) Log.v(TAG, "Measuring #" + i + " " + child
+                if (DEBUG) LogUtils.v("Measuring #" + i + " " + child
                         + ": " + mChildWidthMeasureSpec);
 
                 final LayoutParams lp = (LayoutParams) child.getLayoutParams();
@@ -1267,6 +1288,7 @@ public class ViewPager extends ViewGroup {
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
+        LogUtils.d("");
 
         // Make sure scroll position is set correctly.
         if (w != oldw) {
@@ -1305,6 +1327,7 @@ public class ViewPager extends ViewGroup {
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
+        LogUtils.d("");
         final int count = getChildCount();
         int width = r - l;
         int height = b - t;
@@ -1393,7 +1416,7 @@ public class ViewPager extends ViewGroup {
                                 MeasureSpec.EXACTLY);
                         child.measure(widthSpec, heightSpec);
                     }
-                    if (DEBUG) Log.v(TAG, "Positioning #" + i + " " + child + " f=" + ii.object
+                    if (DEBUG) LogUtils.v("Positioning #" + i + " " + child + " f=" + ii.object
                             + ":" + childLeft + "," + childTop + " " + child.getMeasuredWidth()
                             + "x" + child.getMeasuredHeight());
                     child.layout(childLeft, childTop,
@@ -1414,6 +1437,7 @@ public class ViewPager extends ViewGroup {
 
     @Override
     public void computeScroll() {
+        LogUtils.d("");
         if (!mScroller.isFinished() && mScroller.computeScrollOffset()) {
             int oldX = getScrollX();
             int oldY = getScrollY();
@@ -1588,6 +1612,7 @@ public class ViewPager extends ViewGroup {
 
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
+        LogUtils.d("");
         /*
          * This method JUST determines whether we want to intercept the motion.
          * If we return true, onMotionEvent will be called and we do the actual
@@ -1599,7 +1624,7 @@ public class ViewPager extends ViewGroup {
         // Always take care of the touch gesture being complete.
         if (action == MotionEvent.ACTION_CANCEL || action == MotionEvent.ACTION_UP) {
             // Release the drag.
-            if (DEBUG) Log.v(TAG, "Intercept done!");
+            if (DEBUG) LogUtils.v("Intercept done!");
             mIsBeingDragged = false;
             mIsUnableToDrag = false;
             mActivePointerId = INVALID_POINTER;
@@ -1614,11 +1639,11 @@ public class ViewPager extends ViewGroup {
         // are dragging.
         if (action != MotionEvent.ACTION_DOWN) {
             if (mIsBeingDragged) {
-                if (DEBUG) Log.v(TAG, "Intercept returning true!");
+                if (DEBUG) LogUtils.v("Intercept returning true!");
                 return true;
             }
             if (mIsUnableToDrag) {
-                if (DEBUG) Log.v(TAG, "Intercept returning false!");
+                if (DEBUG) LogUtils.v("Intercept returning false!");
                 return false;
             }
         }
@@ -1646,7 +1671,7 @@ public class ViewPager extends ViewGroup {
                 final float xDiff = Math.abs(dx);
                 final float y = MotionEventCompat.getY(ev, pointerIndex);
                 final float yDiff = Math.abs(y - mInitialMotionY);
-                if (DEBUG) Log.v(TAG, "Moved x to " + x + "," + y + " diff=" + xDiff + "," + yDiff);
+                if (DEBUG) LogUtils.v("Moved x to " + x + "," + y + " diff=" + xDiff + "," + yDiff);
 
                 if (dx != 0 && !isGutterDrag(mLastMotionX, dx) &&
                         canScroll(this, false, (int) dx, (int) x, (int) y)) {
@@ -1657,7 +1682,7 @@ public class ViewPager extends ViewGroup {
                     return false;
                 }
                 if (xDiff > mTouchSlop && xDiff * 0.5f > yDiff) {
-                    if (DEBUG) Log.v(TAG, "Starting drag!");
+                    if (DEBUG) LogUtils.v("Starting drag!");
                     mIsBeingDragged = true;
                     requestParentDisallowInterceptTouchEvent(true);
                     setScrollState(SCROLL_STATE_DRAGGING);
@@ -1670,7 +1695,7 @@ public class ViewPager extends ViewGroup {
                     // direction to be counted as a drag...  abort
                     // any attempt to drag horizontally, to work correctly
                     // with children that have scrolling containers.
-                    if (DEBUG) Log.v(TAG, "Starting unable to drag!");
+                    if (DEBUG) LogUtils.v("Starting unable to drag!");
                     mIsUnableToDrag = true;
                 }
                 if (mIsBeingDragged) {
@@ -1707,7 +1732,7 @@ public class ViewPager extends ViewGroup {
                     mIsBeingDragged = false;
                 }
 
-                if (DEBUG) Log.v(TAG, "Down at " + mLastMotionX + "," + mLastMotionY
+                if (DEBUG) LogUtils.v("Down at " + mLastMotionX + "," + mLastMotionY
                         + " mIsBeingDragged=" + mIsBeingDragged
                         + "mIsUnableToDrag=" + mIsUnableToDrag);
                 break;
@@ -1732,6 +1757,7 @@ public class ViewPager extends ViewGroup {
 
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
+        LogUtils.d("");
         if (mFakeDragging) {
             // A fake drag is in progress already, ignore this real one
             // but still eat the touch events.
@@ -1777,9 +1803,9 @@ public class ViewPager extends ViewGroup {
                     final float xDiff = Math.abs(x - mLastMotionX);
                     final float y = MotionEventCompat.getY(ev, pointerIndex);
                     final float yDiff = Math.abs(y - mLastMotionY);
-                    if (DEBUG) Log.v(TAG, "Moved x to " + x + "," + y + " diff=" + xDiff + "," + yDiff);
+                    if (DEBUG) LogUtils.v("Moved x to " + x + "," + y + " diff=" + xDiff + "," + yDiff);
                     if (xDiff > mTouchSlop && xDiff > yDiff) {
-                        if (DEBUG) Log.v(TAG, "Starting drag!");
+                        if (DEBUG) LogUtils.v("Starting drag!");
                         mIsBeingDragged = true;
                         requestParentDisallowInterceptTouchEvent(true);
                         mLastMotionX = x - mInitialMotionX > 0 ? mInitialMotionX + mTouchSlop :
@@ -1978,6 +2004,7 @@ public class ViewPager extends ViewGroup {
 
     @Override
     public void draw(Canvas canvas) {
+        LogUtils.d("");
         super.draw(canvas);
         boolean needsInvalidate = false;
 
@@ -2020,6 +2047,7 @@ public class ViewPager extends ViewGroup {
 
     @Override
     protected void onDraw(Canvas canvas) {
+        LogUtils.d("");
         super.onDraw(canvas);
 
         // Draw the margin drawable between pages if needed.
@@ -2280,6 +2308,7 @@ public class ViewPager extends ViewGroup {
 
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
+        LogUtils.d("");
         // Let the focused view and/or our descendants get the key first
         return super.dispatchKeyEvent(event) || executeKeyEvent(event);
     }
@@ -2339,7 +2368,7 @@ public class ViewPager extends ViewGroup {
                      parent = parent.getParent()) {
                     sb.append(" => ").append(parent.getClass().getSimpleName());
                 }
-                Log.e(TAG, "arrowScroll tried to find focus based on non-child " +
+                LogUtils.e("arrowScroll tried to find focus based on non-child " +
                         "current focused view " + sb.toString());
                 currentFocused = null;
             }
@@ -2431,6 +2460,7 @@ public class ViewPager extends ViewGroup {
      */
     @Override
     public void addFocusables(ArrayList<View> views, int direction, int focusableMode) {
+        LogUtils.d("");
         final int focusableCount = views.size();
 
         final int descendantFocusability = getDescendantFocusability();
@@ -2475,6 +2505,7 @@ public class ViewPager extends ViewGroup {
      */
     @Override
     public void addTouchables(ArrayList<View> views) {
+        LogUtils.d("");
         // Note that we don't call super.addTouchables(), which means that
         // we don't call View.addTouchables().  This is okay because a ViewPager
         // is itself not touchable.
@@ -2495,6 +2526,7 @@ public class ViewPager extends ViewGroup {
     @Override
     protected boolean onRequestFocusInDescendants(int direction,
                                                   Rect previouslyFocusedRect) {
+        LogUtils.d("");
         int index;
         int increment;
         int end;
@@ -2524,6 +2556,7 @@ public class ViewPager extends ViewGroup {
 
     @Override
     public boolean dispatchPopulateAccessibilityEvent(AccessibilityEvent event) {
+        LogUtils.d("");
         // Dispatch scroll events from this ViewPager.
         if (event.getEventType() == AccessibilityEventCompat.TYPE_VIEW_SCROLLED) {
             return super.dispatchPopulateAccessibilityEvent(event);
@@ -2547,21 +2580,25 @@ public class ViewPager extends ViewGroup {
 
     @Override
     protected ViewGroup.LayoutParams generateDefaultLayoutParams() {
+        LogUtils.d("");
         return new LayoutParams();
     }
 
     @Override
     protected ViewGroup.LayoutParams generateLayoutParams(ViewGroup.LayoutParams p) {
+        LogUtils.d("");
         return generateDefaultLayoutParams();
     }
 
     @Override
     protected boolean checkLayoutParams(ViewGroup.LayoutParams p) {
+        LogUtils.d("");
         return p instanceof LayoutParams && super.checkLayoutParams(p);
     }
 
     @Override
     public ViewGroup.LayoutParams generateLayoutParams(AttributeSet attrs) {
+        LogUtils.d("");
         return new LayoutParams(getContext(), attrs);
     }
 
@@ -2678,11 +2715,13 @@ public class ViewPager extends ViewGroup {
                 = ParcelableCompat.newCreator(new ParcelableCompatCreatorCallbacks<SavedState>() {
             @Override
             public SavedState createFromParcel(Parcel in, ClassLoader loader) {
+                LogUtils.d("");
                 return new SavedState(in, loader);
             }
 
             @Override
             public SavedState[] newArray(int size) {
+                LogUtils.d("");
                 return new SavedState[size];
             }
         });
@@ -2706,6 +2745,7 @@ public class ViewPager extends ViewGroup {
 
         @Override
         public void writeToParcel(Parcel out, int flags) {
+            LogUtils.d("");
             super.writeToParcel(out, flags);
             out.writeInt(position);
             out.writeParcelable(adapterState, flags);
@@ -2774,6 +2814,7 @@ public class ViewPager extends ViewGroup {
     static class ViewPositionComparator implements Comparator<View> {
         @Override
         public int compare(View lhs, View rhs) {
+            LogUtils.d("");
             final LayoutParams llp = (LayoutParams) lhs.getLayoutParams();
             final LayoutParams rlp = (LayoutParams) rhs.getLayoutParams();
             if (llp.isDecor != rlp.isDecor) {
@@ -2787,6 +2828,7 @@ public class ViewPager extends ViewGroup {
 
         @Override
         public void onInitializeAccessibilityEvent(View host, AccessibilityEvent event) {
+            LogUtils.d("");
             super.onInitializeAccessibilityEvent(host, event);
             event.setClassName(ViewPager.class.getName());
             final AccessibilityRecordCompat recordCompat = AccessibilityRecordCompat.obtain();
@@ -2801,6 +2843,7 @@ public class ViewPager extends ViewGroup {
 
         @Override
         public void onInitializeAccessibilityNodeInfo(View host, AccessibilityNodeInfoCompat info) {
+            LogUtils.d("");
             super.onInitializeAccessibilityNodeInfo(host, info);
             info.setClassName(ViewPager.class.getName());
             info.setScrollable(canScroll());
@@ -2814,6 +2857,7 @@ public class ViewPager extends ViewGroup {
 
         @Override
         public boolean performAccessibilityAction(View host, int action, Bundle args) {
+            LogUtils.d("");
             if (super.performAccessibilityAction(host, action, args)) {
                 return true;
             }
@@ -2844,11 +2888,13 @@ public class ViewPager extends ViewGroup {
     private class PagerObserver extends DataSetObserver {
         @Override
         public void onChanged() {
+            LogUtils.d("");
             dataSetChanged();
         }
 
         @Override
         public void onInvalidated() {
+            LogUtils.d("");
             dataSetChanged();
         }
     }
